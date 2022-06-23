@@ -19,10 +19,10 @@ import java.util.Map;
 
 public class KashiCrawlerTest {
     @Test
-    public void test(){
+    public void test() {
         KashiCrawler kashiCrawler = new KashiCrawler();
         List<String> kachiList = kashiCrawler.getKashiList(SelectTypes.LYRIC, "ねこぼーろ", FuzzyTypes.CONTAIN);
-        WordFrequencyAnalysis analysis = new WordFrequencyAnalysis(2,5, 3);
+        WordFrequencyAnalysis analysis = new WordFrequencyAnalysis(2, 5, 5);
         Map<Integer, List<WordFrequency>> resultMap = analysis.analysis(kachiList);
         WordFrequencyAnalysis.print(resultMap);
     }
