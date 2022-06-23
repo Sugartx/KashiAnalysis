@@ -24,7 +24,7 @@ public class WordFrequencyAnalysis {
         this.threshold = threshold;
     }
 
-    public Map<Integer, List<WordFrequency>> analysis(List<String> content){
+    public Map<Integer, List<WordFrequency>> analysis(List<String> content) {
         Map<Integer, Map<String, Integer>> frequencyMap = Maps.newHashMap();
         for (String row : content) {
             merge(analysis(row), frequencyMap);
@@ -34,7 +34,7 @@ public class WordFrequencyAnalysis {
             List<WordFrequency> wordFrequencyList = Lists.newArrayList();
             for (String word : frequencyMap.get(wordLength).keySet()) {
                 int frequency = frequencyMap.get(wordLength).get(word);
-                if (frequency < threshold){
+                if (frequency < threshold) {
                     continue;
                 }
                 wordFrequencyList.add(new WordFrequency(word, frequency));
@@ -47,18 +47,19 @@ public class WordFrequencyAnalysis {
 
     /**
      * 单词频率分析器
+     *
      * @param content
      */
-    public Map<Integer, Map<String, Integer>> analysis(String content){
-        content = content.replace(" ","");
-        content = content.replace("　","");
-        content = content.replace("\n","");
+    public Map<Integer, Map<String, Integer>> analysis(String content) {
+        content = content.replace(" ", "");
+        content = content.replace("　", "");
+        content = content.replace("\n", "");
         Map<Integer, Map<String, Integer>> frequencyMap = Maps.newHashMap();
 
         for (int i = minLength; i <= maxLength; i++) {
             Map<String, Integer> wordFrequencyMap = Maps.newHashMap();
             frequencyMap.put(i, wordFrequencyMap);
-            for (int j = 0; j < content.length() - i; j++) {
+            for (int j = 0; j <= content.length() - i; j++) {
                 String word = content.substring(j, j + i);
                 wordFrequencyMap.put(word, wordFrequencyMap.getOrDefault(word, 0) + 1);
             }
@@ -67,14 +68,18 @@ public class WordFrequencyAnalysis {
         return frequencyMap;
     }
 
-    private void merge(Map<Integer, Map<String, Integer>> origin, Map<Integer, Map<String, Integer>> dest){
+    private void merge(Map<Integer, Map<String, Integer>> origin, Map<Integer, Map<String, Integer>> dest) {
         for (int i = minLength; i <= maxLength; i++) {
             dest.putIfAbsent(i, Maps.newHashMap());
-            dest.get(i).putAll(origin.get(i));
+            Map<String, Integer> resultMap = dest.get(i);
+            for (Map.Entry<String, Integer> entry : origin.get(i).entrySet()) {
+                resultMap.putIfAbsent(entry.getKey(), 0);
+                resultMap.put(entry.getKey(), resultMap.getOrDefault(entry.getKey(), 0) + entry.getValue());
+            }
         }
     }
 
-    public static void print(Map<Integer, List<WordFrequency>> map){
+    public static void print(Map<Integer, List<WordFrequency>> map) {
         map.forEach((wordLength, wordFrequencyList) -> {
             System.out.print(wordLength + "=");
             System.out.println(wordFrequencyList);

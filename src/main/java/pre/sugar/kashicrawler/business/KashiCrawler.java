@@ -1,41 +1,36 @@
 package pre.sugar.kashicrawler.business;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import pre.sugar.kashicrawler.entity.FuzzyTypes;
 import pre.sugar.kashicrawler.entity.SelectTypes;
-import pre.sugar.kashicrawler.entity.WordFrequency;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Author: Xiao Tang
- * Date: 2022/6/23 9:54
+ * Date: 2022/6/23 12:27
  * Description: \
  */
 public class KashiCrawler {
+    private static final int TIMEOUT = 5000;
 
     private static final String BASE_URL = "https://www.uta-net.com";
     private static final String SEARCH_PATH = "/search/?";
 
-    public List<String> getKashiList(SelectTypes select, String keyword, FuzzyTypes fuzzy) {
+    public List<String> getKashiList(SelectTypes select, String keyword, FuzzyTypes fuzzy){
         List<String> kashiUrlList = getKashiUrlList(select, keyword, fuzzy);
-        return kashiUrlList.stream().flatMap(url -> getKashi(url).stream()).collect(Collectors.toList());
+        return kashiUrlList.stream().flatMap(url-> getKashi(url).stream()).collect(Collectors.toList());
     }
 
-    private List<String> getKashi(String kashiUrl) {
+    private List<String> getKashi(String kashiUrl){
         try {
             URL url = new URL(BASE_URL + kashiUrl);
             Document doc = Jsoup.parse(url, 10000);
@@ -47,21 +42,26 @@ public class KashiCrawler {
 
     private List<String> getKashiUrlList(SelectTypes select, String keyword, FuzzyTypes fuzzy) {
         URL url = buildUrl(select, keyword, fuzzy);
-        if (url == null) {
-            return Collections.emptyList();
+        if (url == null){
+            return Lists.newArrayList();
         }
         List<String> kashiUrlList = Lists.newArrayList();
-        try {
-            Document doc = Jsoup.parse(url, 10000);
-            Element element = doc.getElementById("ichiran");
-            Element table = element.child(2).child(0).child(1);
-            for (Element row : table.children()) {
-                String kashiUrl = row.child(0).child(0).attr("href");
-                kashiUrlList.add(kashiUrl);
+        while (true) {
+            try {
+                Document doc = Jsoup.parse(url, TIMEOUT);
+                String artistUrl = doc.getElementsByClass("d-block").attr("href");
+                doc = Jsoup.parse(new URL(BASE_URL + artistUrl), TIMEOUT);
+                Element table = doc.getElementsByClass("songlist-table-body").first();
+                for (Element row : table.children()) {
+                    String kashiUrl = row.child(0).child(0).attr("href");
+                    kashiUrlList.add(kashiUrl);
+                }
+                break;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+        System.out.println("Song count:"+kashiUrlList.size());
         return kashiUrlList;
     }
 
@@ -82,14 +82,4 @@ public class KashiCrawler {
         }
     }
 
-//    public static void main(String[] args) {
-//        KashiCrawler kashiCrawler = new KashiCrawler();
-//        List<String> kachiList = kashiCrawler.getKashiList(SelectTypes.ARTIST, "ねこぼーろ", FuzzyTypes.CONTAIN);
-//        WordFrequencyAnalysis analysis = new WordFrequencyAnalysis(2, 5, 5);
-//        Map<Integer, List<WordFrequency>> resultMap = Maps.newHashMap();
-//        for (String row : kachiList) {
-//            resultMap.putAll(analysis.analysis(row));
-//        }
-//        WordFrequencyAnalysis.print(resultMap);
-//    }
 }
